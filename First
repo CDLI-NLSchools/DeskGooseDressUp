@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desk Goose Dress-Up Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .font-display {
+      font-family: 'Fredoka', cursive;
+    }
+    
+    /* Goose Animations */
+    @keyframes gooseBob {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(-0.5deg); }
+    }
+    @keyframes honkShake {
+      0% { transform: scale(1) rotate(0deg); }
+      20% { transform: scale(1.04, 0.96) rotate(-2deg); }
+      40% { transform: scale(0.97, 1.05) rotate(2deg) translateY(-8px); }
+      60% { transform: scale(1.02, 0.98) rotate(-1deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    @keyframes speechBubblePop {
+      0% { opacity: 0; transform: scale(0.4) translateY(15px); }
+      60% { opacity: 1; transform: scale(1.1) translateY(-4px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .idle-breathe {
+      animation: gooseBob 4s ease-in-out infinite;
+      transform-origin: bottom center;
+    }
+    .honking-animation {
+      animation: honkShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+    .bubble-pop {
+      animation: speechBubblePop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-amber-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-amber-200">
+
+  <header class="bg-white/90 backdrop-blur border-b border-amber-200/70 sticky top-0 z-40 px-4 py-3 shadow-xs">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-amber-400 flex items-center justify-center text-white shadow-md text-xl transform -rotate-6">
+          <i class="fa-solid fa-feather-pointed"></i>
+        </div>
+        <div>
+          <h1 class="font-display text-xl sm:text-2xl font-bold tracking-tight text-amber-900 leading-none">
+            Desk Goose <span class="text-amber-500 font-normal">Studio</span>
+          </h1>
+          <p class="text-xs text-amber-700/80 font-medium">Porch Goose Charm for Your Workspace</p>
+        </div>
+      </div>
+
+      <!-- Quick action controls -->
+      <div class="flex items-center gap-2">
+        <button id="soundToggleBtn" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition text-sm flex items-center gap-1.5" title="Toggle Sound">
+          <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+          <span class="hidden sm:inline text-xs font-semibold">Sound</span>
+        </button>
+
+        <button id="randomizeBtn" class="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold transition text-xs sm:text-sm flex items-center gap-2 border border-amber-300">
+          <i class="fa-solid fa-dice text-amber-600"></i>
+          <span>Surprise Me</span>
+        </button>
+
+        <button id="resetBtn" class="p-2.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 transition text-sm" title="Remove all clothes (Naked Goose!)">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+
+        <button id="snapshotBtn" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition text-xs sm:text-sm flex items-center gap-2 shadow-sm">
+          <i class="fa-solid fa-camera"></i>
+          <span class="hidden sm:inline">Take Photo</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto w-full p-3 sm:p-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- LEFT: Interactive Goose Display Stage -->
+    <section class="lg:col-span-7 flex flex-col items-center">
+      
+      <!-- Goose Scene Container -->
+      <div id="sceneContainer" class="relative w-full aspect-[4/5] max-h-[580px] rounded-3xl overflow-hidden shadow-2xl border-4 border-white transition-all duration-500 bg-gradient-to-b from-sky-100 to-amber-100 flex flex-col justify-end items-center">
+        
+        <!-- Environment Background Decoration (Layer 0) -->
+        <div id="envBackdrop" class="absolute inset-0 pointer-events-none transition-all duration-500">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Speech Bubble (Honk & Quotes) -->
+        <div id="speechBubble" class="absolute top-8 left-1/2 -translate-x-1/2 z-30 opacity-0 pointer-events-none transition-all duration-300">
+          <div class="relative bg-white text-slate-800 px-5 py-2.5 rounded-2xl shadow-xl border-2 border-amber-300 text-center">
+            <span id="speechText" class="font-display font-bold text-lg text-amber-900 tracking-wide">HONK!!</span>
+            <div class="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-white"></div>
+          </div>
+        </div>
+
+        <!-- Interactive Goose SVG -->
+        <div id="gooseActor" class="relative z-10 w-[78%] h-[84%] flex items-end justify-center cursor-pointer idle-breathe pb-4">
+          <svg id="gooseSvg" viewBox="0 0 500 620" class="w-full h-full drop-shadow-xl overflow-visible">
+            
+            <defs>
+              <radialGradient id="gooseShade" cx="40%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="70%" stop-color="#f8fafc" />
+                <stop offset="100%" stop-color="#e2e8f0" />
+              </radialGradient>
+              <linearGradient id="beakGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+                <stop offset="0%" stop-color="#f59e0b" />
+                <stop offset="100%" stop-color="#ea580c" />
+              </linearGradient>
+              <linearGradient id="footGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#fb923c" />
+                <stop offset="100%" stop-color="#ea580c" />
+              </linearGradient>
+              <filter id="shadowFilter" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0" dy="4" stdDeviation="5" flood-opacity="0.15" />
+              </filter>
+            </defs>
+
+            <!-- Shadow underneath -->
+            <ellipse cx="250" cy="590" rx="145" ry="24" fill="#0f172a" fill-opacity="0.22" />
+
+            <!-- GOOSE FEET (Base or replaced by Boots) -->
+            <g id="baseFeetLayer">
+              <!-- Left Foot -->
+              <path d="M 195 565 C 190 580, 160 595, 145 595 C 160 595, 175 585, 185 580 C 175 592, 195 598, 205 590 C 205 580, 215 570, 212 560 Z" fill="url(#footGrad)" stroke="#c2410c" stroke-width="2.5" />
+              <!-- Right Foot -->
+              <path d="M 295 565 C 290 580, 260 595, 245 595 C 260 595, 275 585, 285 580 C 275 592, 295 598, 305 590 C 305 580, 315 570, 312 560 Z" fill="url(#footGrad)" stroke="#c2410c" stroke-width="2.5" />
+            </g>
+
+            <!-- FOOTWEAR LAYER -->
+            <g id="layerFootwear"></g>
+
+            <!-- GOOSE BODY BASE -->
+            <g id="gooseBodyBase">
+              <!-- Main plumper body -->
+              <path d="M 170 380 C 130 400, 100 450, 105 510 C 110 560, 170 585, 260 585 C 360 585, 410 540, 415 480 C 420 420, 370 375, 330 365 C 310 320, 290 220, 280 150 C 285 105, 255 70, 215 70 C 175 70, 160 100, 170 145 C 185 220, 205 310, 220 370 Z" 
+                    fill="url(#gooseShade)" stroke="#cbd5e1" stroke-width="4" stroke-linejoin="round"/>
+              
+              <!-- Subtle wing folds -->
+              <path d="M 210 410 C 180 435, 165 470, 170 515 C 185 530, 210 540, 240 540 C 270 530, 290 500, 285 450 C 280 415, 250 400, 210 410 Z" 
+                    fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2.5" opacity="0.9" />
+
+              <!-- Goose Tail Tuft -->
+              <path d="M 400 450 C 440 435, 455 420, 445 445 C 440 460, 425 475, 410 485 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="3" />
+
+              <!-- Beak (Classic Porch Goose Beak) -->
+              <path d="M 175 110 C 145 105, 110 115, 80 120 C 105 138, 140 142, 175 135 Z" 
+                    fill="url(#beakGrad)" stroke="#c2410c" stroke-width="3.5" stroke-linejoin="round" />
+              <!-- Nostril -->
+              <ellipse cx="140" cy="118" rx="2" ry="3.5" fill="#7c2d12" transform="rotate(-15, 140, 118)" />
+
+              <!-- Goose Eye (Curious & slightly mischievous) -->
+              <circle cx="198" cy="108" r="7" fill="#0f172a" />
+              <circle cx="196" cy="105" r="2.5" fill="#ffffff" />
+
+              <!-- Cute Cheek Blush (Toggleable) -->
+              <ellipse id="blushCheek" cx="195" cy="126" rx="9" ry="6" fill="#f43f5e" opacity="0.5" />
+            </g>
+
+            <!-- OUTFIT LAYER (Dresses, Raincoats, Sweaters, Costumes) -->
+            <g id="layerOutfit"></g>
+
+            <!-- NECKWEAR LAYER (Collars, Ties, Scarves, Bandanas) -->
+            <g id="layerNeckwear"></g>
+
+            <!-- BEAK ACCESSORY (Keys, Bell, Flower, Coffee Mug) -->
+            <g id="layerBeak"></g>
+
+            <!-- EYEWEAR / FACE LAYER (Sunglasses, Monocle) -->
+            <g id="layerEyewear"></g>
+
+            <!-- HAT / HEADWEAR LAYER -->
+            <g id="layerHat"></g>
+
+          </svg>
+        </div>
+
+        <!-- Goose Name Plaque & Honk Button Bar -->
+        <div class="relative z-20 w-full px-4 pb-3 flex items-center justify-between gap-2">
+          
+          <!-- Name Tag -->
+          <div class="bg-amber-900/80 backdrop-blur-md text-amber-100 border border-amber-600/50 px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-lg max-w-[200px]">
+            <i class="fa-solid fa-tag text-amber-400 text-xs"></i>
+            <input type="text" id="gooseNameInput" value="Lucy the Goose" maxlength="18" 
+                   class="bg-transparent font-display font-semibold text-xs sm:text-sm text-white focus:outline-none w-full border-b border-transparent focus:border-amber-400 text-center tracking-wide" title="Click to rename your goose!">
+          </div>
+
+          <!-- Giant HONK Button -->
+          <button id="honkBtn" class="group bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-display font-bold px-5 py-2 rounded-full shadow-lg hover:shadow-orange-500/30 transform active:scale-95 transition flex items-center gap-2 border-2 border-white/60">
+            <i class="fa-solid fa-bullhorn text-sm transition-transform group-hover:rotate-12"></i>
+            <span class="tracking-wider text-sm sm:text-base">HONK!</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Environment & Backdrop Quick Switcher -->
+      <div class="w-full mt-4 bg-white p-3 rounded-2xl border border-amber-100 shadow-sm flex items-center justify-between gap-2">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 ml-2">
+          <i class="fa-solid fa-image text-amber-500"></i> Setting
+        </span>
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1" id="backdropSelectors">
+          <!-- Backdrop buttons inserted via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Wardrobe & Dressing Panel -->
+    <section class="lg:col-span-5 bg-white rounded-3xl border border-amber-200/80 shadow-xl flex flex-col h-[640px] overflow-hidden">
+      
+      <!-- Panel Header & Category Tabs -->
+      <div class="p-4 border-b border-slate-100 bg-amber-50/50">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-display font-bold text-lg text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-shirt text-amber-500"></i>
+            <span>Wardrobe Closet</span>
+          </h2>
+          <span id="activeOutfitCount" class="text-xs font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+            0 Items Worn
+          </span>
+        </div>
+
+        <!-- Category Nav -->
+        <nav class="flex items-center gap-1.5 overflow-x-auto pb-1" id="categoryNav">
+          <button data-cat="hats" class="cat-tab active px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-amber-500 text-white shadow-xs">
+            <i class="fa-solid fa-hat-cowboy"></i> Hats
+          </button>
+          <button data-cat="outfits" class="cat-tab px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <i class="fa-solid fa-vest"></i> Outfits
+          </button>
+          <button data-cat="neckwear" class="cat-tab px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <i class="fa-solid fa-ribbon"></i> Neckwear
+          </button>
+          <button data-cat="beak" class="cat-tab px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <i class="fa-solid fa-key"></i> In Beak
+          </button>
+          <button data-cat="footwear" class="cat-tab px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <i class="fa-solid fa-shoe-prints"></i> Boots
+          </button>
+          <button data-cat="extra" class="cat-tab px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <i class="fa-solid fa-glasses"></i> Extras
+          </button>
+        </nav>
+      </div>
+
+      <!-- Items Grid Area -->
+      <div class="flex-1 overflow-y-auto p-4">
+        <div id="itemsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <!-- Dynamic outfit buttons injected here -->
+        </div>
+      </div>
+
+      <!-- Current Outfit Summary Bar -->
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+        <span id="currentlyWearingSummary">Wearing: Natural Goose</span>
+        <button id="clearCategoryBtn" class="text-rose-500 hover:text-rose-700 font-bold transition flex items-center gap-1">
+          <i class="fa-solid fa-trash-can"></i> Remove current
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Photo Modal / Snapshot Card View -->
+  <div id="photoModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Polaroid Card Mockup -->
+      <div id="polaroidCard" class="w-full bg-white p-3.5 pb-6 rounded-xl shadow-md border border-slate-200 flex flex-col items-center">
+        <div id="polaroidCanvasWrapper" class="w-full aspect-[4/5] rounded-lg overflow-hidden bg-slate-100 relative">
+          <!-- Rendered snapshot will be placed into canvas -->
+          <canvas id="snapshotCanvas" class="w-full h-full object-cover"></canvas>
+        </div>
+        <div class="mt-4 text-center font-display">
+          <h3 id="polaroidTitle" class="text-lg font-bold text-slate-800">Lucy the Goose</h3>
+          <p id="polaroidSubtitle" class="text-xs text-amber-700 italic font-sans font-medium">Desk Goose Fashion Week</p>
+        </div>
+      </div>
+
+      <!-- Modal Action Buttons -->
+      <div class="flex items-center gap-3 w-full mt-5">
+        <button id="closeModalBtn" class="flex-1 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-sm transition">
+          Close
+        </button>
+        <button id="downloadPhotoBtn" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition shadow flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download"></i> Save Polaroid
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Hidden Audio Engine (Web Audio API Synthesizer) -->
+  <script>
+    class GooseSynthesizer {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      initContext() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playHonk() {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+
+        // Comical goose formant synthesis (two detuned saw oscillators through bandpass)
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc2.type = 'triangle';
+
+        // Honk pitch sweep (typical brassy goose honk starts slightly lower, peaks, then drops)
+        const baseFreq = 270 + Math.random() * 40;
+        osc1.frequency.setValueAtTime(baseFreq * 0.85, now);
+        osc1.frequency.exponentialRampToValueAtTime(baseFreq * 1.35, now + 0.08);
+        osc1.frequency.exponentialRampToValueAtTime(baseFreq * 0.75, now + 0.32);
+
+        osc2.frequency.setValueAtTime(baseFreq * 1.6, now);
+        osc2.frequency.exponentialRampToValueAtTime(baseFreq * 2.2, now + 0.08);
+        osc2.frequency.exponentialRampToValueAtTime(baseFreq * 1.3, now + 0.32);
+
+        // Vocal tract resonance filter
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(850, now);
+        filter.frequency.linearRampToValueAtTime(1400, now + 0.09);
+        filter.frequency.linearRampToValueAtTime(700, now + 0.32);
+        filter.Q.setValueAtTime(4.5, now);
+
+        // Envelope
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.35, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.36);
+        osc2.stop(now + 0.36);
+      }
+
+      playClick() {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(700, now);
+        osc.frequency.exponentialRampToValueAtTime(350, now + 0.04);
+
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.05);
+      }
+    }
+
+    const soundSystem = new GooseSynthesizer();
+  </script>
+
+  <script>
+    // Detailed vector outfit definitions tailored for the goose body
+    const WARDROBE_DATA = {
+      hats: [
+        {
+          id: 'hat_rain',
+          name: 'Yellow Sou\'wester',
+          tag: 'Cozy Rain',
+          previewBg: '#fef08a',
+          svg: `
+            <g id="item_hat_rain">
+              <path d="M 140 100 C 130 55, 230 45, 260 90 C 275 105, 220 115, 140 100 Z" fill="#eab308" stroke="#ca8a04" stroke-width="3" />
+              <path d="M 115 110 C 145 95, 255 90, 275 115 C 245 125, 140 120, 115 110 Z" fill="#facc15" stroke="#ca8a04" stroke-width="2.5" />
+            </g>
+          `
+        },
+        {
+          id: 'hat_chef',
+          name: 'Chef Toque',
+          tag: 'Culinary Master',
+          previewBg: '#f8fafc',
+          svg: `
+            <g id="item_hat_chef">
+              <path d="M 170 85 C 150 70, 145 30, 185 20 C 210 5, 245 15, 255 35 C 275 25, 290 60, 265 85 Z" fill="#ffffff" stroke="#94a3b8" stroke-width="3" />
+              <rect x="175" y="75" width="85" height="22" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2.5" />
+            </g>
+          `
+        },
+        {
+          id: 'hat_party',
+          name: 'Birthday Cone',
+          tag: 'Party Time',
+          previewBg: '#fed7aa',
+          svg: `
+            <g id="item_hat_party">
+              <polygon points="215,10 180,85 250,80" fill="#ec4899" stroke="#be185d" stroke-width="3" />
+              <circle cx="215" cy="10" r="9" fill="#facc15" />
+              <circle cx="205" cy="40" r="5" fill="#38bdf8" />
+              <circle cx="225" cy="60" r="6" fill="#4ade80" />
+            </g>
+          `
+        },
+        {
+          id: 'hat_witch',
+          name: 'Witch Hat',
+          tag: 'Spooky Season',
+          previewBg: '#e9d5ff',
+          svg: `
+            <g id="item_hat_witch">
+              <polygon points="210,0 170,80 250,75" fill="#1e1b4b" stroke="#312e81" stroke-width="3" />
+              <ellipse cx="210" cy="80" rx="65" ry="14" fill="#0f172a" stroke="#312e81" stroke-width="2.5" />
+              <rect x="180" y="68" width="60" height="9" fill="#a855f7" />
+              <rect x="204" y="66" width="12" height="13" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" />
+            </g>
+          `
+        },
+        {
+          id: 'hat_beret',
+          name: 'Strawberry Beret',
+          tag: 'Cottagecore',
+          previewBg: '#fecdd3',
+          svg: `
+            <g id="item_hat_beret">
+              <ellipse cx="215" cy="75" rx="48" ry="20" fill="#e11d48" stroke="#9f1239" stroke-width="2.5" transform="rotate(-6, 215, 75)" />
+              <circle cx="215" cy="55" r="4" fill="#15803d" />
+              <!-- Strawberry seeds -->
+              <ellipse cx="195" cy="72" rx="1.5" ry="2.5" fill="#fef08a" />
+              <ellipse cx="225" cy="75" rx="1.5" ry="2.5" fill="#fef08a" />
+              <ellipse cx="210" cy="80" rx="1.5" ry="2.5" fill="#fef08a" />
+            </g>
+          `
+        },
+        {
+          id: 'hat_flower',
+          name: 'Flower Crown',
+          tag: 'Spring Bloom',
+          previewBg: '#bbf7d0',
+          svg: `
+            <g id="item_hat_flower">
+              <path d="M 165 85 Q 215 70 260 85" stroke="#15803d" stroke-width="5" fill="none" stroke-linecap="round" />
+              <circle cx="175" cy="82" r="9" fill="#f43f5e" /><circle cx="175" cy="82" r="3.5" fill="#fef08a" />
+              <circle cx="200" cy="74" r="10" fill="#fbbf24" /><circle cx="200" cy="74" r="4" fill="#ffffff" />
+              <circle cx="228" cy="75" r="9" fill="#ec4899" /><circle cx="228" cy="75" r="3.5" fill="#fef08a" />
+              <circle cx="252" cy="84" r="8" fill="#38bdf8" /><circle cx="252" cy="84" r="3" fill="#ffffff" />
+            </g>
+          `
+        },
+        {
+          id: 'hat_beanie',
+          name: 'Winter Bobble Beanie',
+          tag: 'Frosty Days',
+          previewBg: '#cffafe',
+          svg: `
+            <g id="item_hat_beanie">
+              <path d="M 170 85 C 165 40, 255 35, 255 85 Z" fill="#0284c7" stroke="#0369a1" stroke-width="3" />
+              <rect x="165" y="75" width="95" height="18" rx="6" fill="#38bdf8" stroke="#0369a1" stroke-width="2" />
+              <circle cx="212" cy="35" r="12" fill="#ffffff" stroke="#94a3b8" stroke-width="2" />
+            </g>
+          `
+        },
+        {
+          id: 'hat_detective',
+          name: 'Deerstalker Cap',
+          tag: 'Sleuth Goose',
+          previewBg: '#e2e8f0',
+          svg: `
+            <g id="item_hat_detective">
+              <path d="M 165 85 C 160 50, 260 45, 258 85 Z" fill="#78716c" stroke="#44403c" stroke-width="3" />
+              <path d="M 145 92 Q 215 80 275 92" stroke="#44403c" stroke-width="6" fill="none" stroke-linecap="round" />
+              <circle cx="212" cy="50" r="4" fill="#292524" />
+            </g>
+          `
+        }
+      ],
+
+      outfits: [
+        {
+          id: 'outfit_raincoat',
+          name: 'Yellow Rain Slicker',
+          tag: 'Classic Porch',
+          previewBg: '#fef08a',
+          svg: `
+            <g id="item_outfit_raincoat">
+              <path d="M 195 270 C 160 330, 110 430, 115 540 C 130 560, 390 560, 405 520 C 400 420, 340 330, 275 270 Z" 
+                    fill="#facc15" stroke="#ca8a04" stroke-width="4" stroke-linejoin="round"/>
+              <!-- Raincoat snap buttons -->
+              <circle cx="250" cy="350" r="5" fill="#475569" />
+              <circle cx="250" cy="405" r="5" fill="#475569" />
+              <circle cx="250" cy="460" r="5" fill="#475569" />
+              <circle cx="250" cy="515" r="5" fill="#475569" />
+              <!-- Flap pocket -->
+              <rect x="290" y="440" width="45" height="35" rx="6" fill="#eab308" stroke="#ca8a04" stroke-width="2.5" />
+            </g>
+          `
+        },
+        {
+          id: 'outfit_sweater',
+          name: 'Cable Knit Sweater',
+          tag: 'Autumn Warmth',
+          previewBg: '#ffedd5',
+          svg: `
+            <g id="item_outfit_sweater">
+              <path d="M 190 280 C 160 340, 115 420, 120 535 C 135 555, 385 555, 400 515 C 390 410, 335 330, 275 280 Z" 
+                    fill="#ea580c" stroke="#c2410c" stroke-width="4" stroke-linejoin="round"/>
+              <!-- Cable knit ribbed details -->
+              <path d="M 230 310 L 230 540 M 265 310 L 265 540" stroke="#9a3412" stroke-width="3.5" stroke-dasharray="8 6" />
+              <!-- Roll collar -->
+              <ellipse cx="232" cy="285" rx="42" ry="16" fill="#c2410c" stroke="#9a3412" stroke-width="3" />
+            </g>
+          `
+        },
+        {
+          id: 'outfit_pinafore',
+          name: 'Grandma\'s Pinafore',
+          tag: 'Vintage Porch',
+          previewBg: '#ede9fe',
+          svg: `
+            <g id="item_outfit_pinafore">
+              <path d="M 185 320 C 150 380, 110 440, 115 545 C 140 565, 380 565, 405 520 C 395 430, 330 350, 280 320 Z" 
+                    fill="#c084fc" stroke="#7e22ce" stroke-width="3.5" />
+              <!-- Pinafore frills -->
+              <path d="M 115 545 Q 260 580 405 520" stroke="#f3e8ff" stroke-width="12" fill="none" stroke-linecap="round" />
+              <path d="M 200 320 L 175 420 M 265 320 L 290 420" stroke="#7e22ce" stroke-width="4" />
+              <!-- Daisy pattern -->
+              <circle cx="210" cy="460" r="7" fill="#ffffff" /><circle cx="210" cy="460" r="3" fill="#fbbf24" />
+              <circle cx="290" cy="470" r="7" fill="#ffffff" /><circle cx="290" cy="470" r="3" fill="#fbbf24" />
+              <circle cx="340" cy="500" r="7" fill="#ffffff" /><circle cx="340" cy="500" r="3" fill="#fbbf24" />
+            </g>
+          `
+        },
+        {
+          id: 'outfit_dino',
+          name: 'Dino Goose Hoodie',
+          tag: 'Prehistoric',
+          previewBg: '#dcfce7',
+          svg: `
+            <g id="item_outfit_dino">
+              <path d="M 185 270 C 155 330, 110 430, 115 540 C 130 560, 385 560, 405 520 C 400 420, 335 325, 275 270 Z" 
+                    fill="#22c55e" stroke="#15803d" stroke-width="4" />
+              <!-- Belly patch -->
+              <ellipse cx="250" cy="440" rx="65" ry="75" fill="#bbf7d0" stroke="#16a34a" stroke-width="2.5" />
+              <!-- Dinosaur back spikes along the spine -->
+              <polygon points="310,310 340,325 325,345" fill="#facc15" stroke="#ca8a04" stroke-width="2" />
+              <polygon points="350,370 385,385 370,410" fill="#facc15" stroke="#ca8a04" stroke-width="2" />
+              <polygon points="390,440 430,455 410,480" fill="#facc15" stroke="#ca8a04" stroke-width="2" />
+            </g>
+          `
+        },
+        {
+          id: 'outfit_vampire',
+          name: 'Count Honkula Cape',
+          tag: 'Halloween Special',
+          previewBg: '#fce7f3',
+          svg: `
+            <g id="item_outfit_vampire">
+              <!-- High Vampiric collar -->
+              <polygon points="175,250 140,160 215,220" fill="#dc2626" stroke="#991b1b" stroke-width="2.5" />
+              <polygon points="280,250 315,160 245,220" fill="#dc2626" stroke="#991b1b" stroke-width="2.5" />
+              <!-- Cloak body -->
+              <path d="M 180 270 C 130 350, 90 450, 95 550 C 150 540, 370 540, 420 540 C 420 440, 360 340, 275 270 Z" 
+                    fill="#0f172a" stroke="#334155" stroke-width="4" />
+              <!-- Cape inner red lining peeking through -->
+              <path d="M 185 285 C 170 360, 150 440, 145 520 C 180 500, 210 460, 215 350 Z" fill="#b91c1c" />
+              <!-- Medallion -->
+              <circle cx="230" cy="275" r="9" fill="#eab308" stroke="#ca8a04" stroke-width="2" />
+              <circle cx="230" cy="275" r="4" fill="#dc2626" />
+            </g>
+          `
+        },
+        {
+          id: 'outfit_bee',
+          name: 'Bumblebee Costume',
+          tag: 'Sweet Buzz',
+          previewBg: '#fef9c3',
+          svg: `
+            <g id="item_outfit_bee">
+              <path d="M 185 280 C 155 340, 110 430, 115 540 C 130 560, 385 560, 405 520 C 400 420, 335 325, 275 280 Z" 
+                    fill="#fbbf24" stroke="#d97706" stroke-width="4" />
+              <!-- Bee stripes -->
+              <path d="M 140 370 C 230 350, 310 350, 365 370" stroke="#1e293b" stroke-width="28" fill="none" stroke-linecap="round" />
+              <path d="M 120 460 C 240 440, 330 440, 395 460" stroke="#1e293b" stroke-width="32" fill="none" stroke-linecap="round" />
+              <!-- Fairy Gossamer Wings -->
+              <ellipse cx="320" cy="330" rx="35" ry="60" fill="#bae6fd" fill-opacity="0.7" stroke="#38bdf8" stroke-width="2.5" transform="rotate(35, 320, 330)" />
+              <ellipse cx="350" cy="355" rx="25" ry="45" fill="#e0f2fe" fill-opacity="0.7" stroke="#38bdf8" stroke-width="2" transform="rotate(50, 350, 355)" />
+            </g>
+          `
+        }
+      ],
+
+      neckwear: [
+        {
+          id: 'neck_red_scarf',
+          name: 'Red Knit Scarf',
+          tag: 'Classic Cozy',
+          previewBg: '#fee2e2',
+          svg: `
+            <g id="item_neck_red_scarf">
+              <ellipse cx="230" cy="255" rx="42" ry="18" fill="#dc2626" stroke="#991b1b" stroke-width="3" />
+              <path d="M 235 260 L 255 370 L 225 375 L 210 265 Z" fill="#b91c1c" stroke="#991b1b" stroke-width="2.5" />
+              <!-- Tassels -->
+              <line x1="228" y1="375" x2="228" y2="390" stroke="#991b1b" stroke-width="3" />
+              <line x1="238" y1="375" x2="238" y2="390" stroke="#991b1b" stroke-width="3" />
+              <line x1="248" y1="375" x2="248" y2="390" stroke="#991b1b" stroke-width="3" />
+            </g>
+          `
+        },
+        {
+          id: 'neck_tie',
+          name: 'Gentlegoose Tie',
+          tag: 'Business Honk',
+          previewBg: '#e0e7ff',
+          svg: `
+            <g id="item_neck_tie">
+              <!-- White Shirt Collar -->
+              <polygon points="195,230 230,260 220,230" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+              <polygon points="265,230 230,260 240,230" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+              <!-- Tie knot & tail -->
+              <polygon points="224,250 236,250 240,265 220,265" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5" />
+              <polygon points="222,265 238,265 244,360 230,380 216,360" fill="#1d4ed8" stroke="#1e40af" stroke-width="2" />
+              <!-- Stripes -->
+              <line x1="220" y1="290" x2="240" y2="305" stroke="#facc15" stroke-width="3" />
+              <line x1="218" y1="325" x2="242" y2="340" stroke="#facc15" stroke-width="3" />
+            </g>
+          `
+        },
+        {
+          id: 'neck_bell',
+          name: 'Golden Brass Bell',
+          tag: 'Porch Classic',
+          previewBg: '#fef3c7',
+          svg: `
+            <g id="item_neck_bell">
+              <path d="M 195 240 Q 230 260 265 240" stroke="#059669" stroke-width="8" fill="none" stroke-linecap="round" />
+              <!-- Brass bell -->
+              <path d="M 220 255 C 220 245, 240 245, 240 255 L 245 275 L 215 275 Z" fill="#f59e0b" stroke="#b45309" stroke-width="2.5" />
+              <circle cx="230" cy="278" r="4" fill="#78350f" />
+            </g>
+          `
+        },
+        {
+          id: 'neck_pearls',
+          name: 'Fancy Pearl Necklace',
+          tag: 'High Society',
+          previewBg: '#f1f5f9',
+          svg: `
+            <g id="item_neck_pearls">
+              <path d="M 195 245 Q 232 280 265 245" stroke="#e2e8f0" stroke-width="2" fill="none" />
+              <!-- Pearl beads -->
+              <circle cx="198" cy="246" r="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+              <circle cx="210" cy="254" r="5.5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+              <circle cx="222" cy="260" r="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+              <circle cx="235" cy="260" r="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+              <circle cx="248" cy="254" r="5.5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+              <circle cx="260" cy="246" r="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            </g>
+          `
+        }
+      ],
+
+      beak: [
+        {
+          id: 'beak_key',
+          name: 'Golden Stolen Key',
+          tag: 'Troublemaker',
+          previewBg: '#fef08a',
+          svg: `
+            <g id="item_beak_key">
+              <circle cx="85" cy="145" r="14" fill="none" stroke="#eab308" stroke-width="5" />
+              <rect x="94" y="141" width="38" height="8" rx="2" fill="#eab308" stroke="#ca8a04" stroke-width="1" />
+              <rect x="122" y="148" width="6" height="8" fill="#ca8a04" />
+              <rect x="112" y="148" width="6" height="6" fill="#ca8a04" />
+            </g>
+          `
+        },
+        {
+          id: 'beak_flower',
+          name: 'Yellow Buttercup',
+          tag: 'Peace Offering',
+          previewBg: '#fef9c3',
+          svg: `
+            <g id="item_beak_flower">
+              <path d="M 80 160 Q 115 140 120 130" stroke="#16a34a" stroke-width="4" fill="none" />
+              <circle cx="78" cy="162" r="9" fill="#facc15" stroke="#ca8a04" stroke-width="2" />
+              <circle cx="78" cy="162" r="4" fill="#ea580c" />
+            </g>
+          `
+        },
+        {
+          id: 'beak_coffee',
+          name: 'Desk Coffee Mug',
+          tag: 'Productive Honk',
+          previewBg: '#ffedd5',
+          svg: `
+            <g id="item_beak_coffee">
+              <!-- Mug handle around beak tip -->
+              <rect x="80" y="132" width="28" height="34" rx="4" fill="#0284c7" stroke="#0369a1" stroke-width="2" />
+              <path d="M 107 138 C 117 138, 117 158, 107 158" stroke="#0284c7" stroke-width="3.5" fill="none" />
+              <!-- Steam -->
+              <path d="M 88 126 Q 85 118 90 112" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round" />
+              <path d="M 98 128 Q 102 120 97 114" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round" />
+            </g>
+          `
+        },
+        {
+          id: 'beak_letter',
+          name: 'Love Letter Envelope',
+          tag: 'Special Delivery',
+          previewBg: '#fee2e2',
+          svg: `
+            <g id="item_beak_letter">
+              <rect x="75" y="130" width="38" height="26" rx="2" fill="#ffffff" stroke="#94a3b8" stroke-width="2" transform="rotate(-10, 90, 140)" />
+              <polygon points="76,128 94,142 112,128" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" transform="rotate(-10, 90, 140)" />
+              <circle cx="94" cy="138" r="4" fill="#e11d48" transform="rotate(-10, 90, 140)" />
+            </g>
+          `
+        }
+      ],
+
+      footwear: [
+        {
+          id: 'boots_yellow',
+          name: 'Puddle Jumpers',
+          tag: 'Rainy Day',
+          previewBg: '#fef08a',
+          svg: `
+            <g id="item_boots_yellow">
+              <!-- Left Boot -->
+              <path d="M 175 550 L 170 585 C 160 595, 140 600, 130 595 C 130 585, 160 580, 185 580 L 195 550 Z" fill="#eab308" stroke="#ca8a04" stroke-width="3" stroke-linejoin="round" />
+              <rect x="172" y="546" width="25" height="7" rx="2" fill="#facc15" stroke="#ca8a04" stroke-width="1.5" />
+              <!-- Right Boot -->
+              <path d="M 275 550 L 270 585 C 260 595, 240 600, 230 595 C 230 585, 260 580, 285 580 L 295 550 Z" fill="#eab308" stroke="#ca8a04" stroke-width="3" stroke-linejoin="round" />
+              <rect x="272" y="546" width="25" height="7" rx="2" fill="#facc15" stroke="#ca8a04" stroke-width="1.5" />
+            </g>
+          `
+        },
+        {
+          id: 'boots_bunny',
+          name: 'Bunny Slippers',
+          tag: 'Cozy Morning',
+          previewBg: '#fce7f3',
+          svg: `
+            <g id="item_boots_bunny">
+              <!-- Left Slipper -->
+              <ellipse cx="165" cy="585" rx="35" ry="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="3" />
+              <ellipse cx="145" cy="570" rx="6" ry="14" fill="#fbcfe8" stroke="#f472b6" stroke-width="2" transform="rotate(-15, 145, 570)" />
+              <circle cx="138" cy="585" r="2.5" fill="#0f172a" />
+              <!-- Right Slipper -->
+              <ellipse cx="265" cy="585" rx="35" ry="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="3" />
+              <ellipse cx="245" cy="570" rx="6" ry="14" fill="#fbcfe8" stroke="#f472b6" stroke-width="2" transform="rotate(-15, 245, 570)" />
+              <circle cx="238" cy="585" r="2.5" fill="#0f172a" />
+            </g>
+          `
+        },
+        {
+          id: 'boots_skates',
+          name: 'Retro Roller Skates',
+          tag: 'Fast Goose',
+          previewBg: '#cffafe',
+          svg: `
+            <g id="item_boots_skates">
+              <!-- Left Skate -->
+              <path d="M 180 550 L 175 580 L 140 582 L 145 570 L 195 550 Z" fill="#06b6d4" stroke="#0891b2" stroke-width="2.5" />
+              <rect x="135" y="585" width="50" height="5" fill="#64748b" />
+              <circle cx="145" cy="596" r="7" fill="#f43f5e" stroke="#be123c" stroke-width="2" />
+              <circle cx="178" cy="596" r="7" fill="#f43f5e" stroke="#be123c" stroke-width="2" />
+              <!-- Right Skate -->
+              <path d="M 280 550 L 275 580 L 240 582 L 245 570 L 295 550 Z" fill="#06b6d4" stroke="#0891b2" stroke-width="2.5" />
+              <rect x="235" y="585" width="50" height="5" fill="#64748b" />
+              <circle cx="245" cy="596" r="7" fill="#f43f5e" stroke="#be123c" stroke-width="2" />
+              <circle cx="278" cy="596" r="7" fill="#f43f5e" stroke="#be123c" stroke-width="2" />
+            </g>
+          `
+        }
+      ],
+
+      extra: [
+        {
+          id: 'extra_shades',
+          name: 'Cool Sunglasses',
+          tag: 'Too Cool',
+          previewBg: '#fed7aa',
+          svg: `
+            <g id="item_extra_shades">
+              <path d="M 185 106 Q 200 102 215 106 L 210 118 Q 198 120 185 116 Z" fill="#0f172a" stroke="#1e293b" stroke-width="2" />
+              <!-- Bridge & temple -->
+              <line x1="215" y1="106" x2="225" y2="108" stroke="#0f172a" stroke-width="3" />
+              <line x1="185" y1="106" x2="165" y2="102" stroke="#0f172a" stroke-width="3" />
+            </g>
+          `
+        },
+        {
+          id: 'extra_monocle',
+          name: 'Scholar\'s Monocle',
+          tag: 'Aristocratic',
+          previewBg: '#fef08a',
+          svg: `
+            <g id="item_extra_monocle">
+              <circle cx="198" cy="108" r="11" fill="none" stroke="#d97706" stroke-width="2.5" />
+              <path d="M 205 117 Q 215 130 220 155" fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="3 2" />
+            </g>
+          `
+        },
+        {
+          id: 'extra_blush',
+          name: 'Rosy Pink Cheeks',
+          tag: 'Sweet Blush',
+          previewBg: '#ffe4e6',
+          isBlushToggle: true,
+          svg: `
+            <g id="item_extra_blush">
+              <circle cx="195" cy="126" r="10" fill="#f43f5e" opacity="0.6" />
+            </g>
+          `
+        }
+      ]
+    };
+
+    // Environment Backdrops
+    const BACKDROPS = [
+      {
+        id: 'desk',
+        name: 'Cozy Desk',
+        icon: 'fa-desktop',
+        bgClass: 'from-amber-100 via-orange-50 to-amber-200',
+        decorSvg: `
+          <!-- Wooden desk plank & lamp glow -->
+          <div class="absolute bottom-0 inset-x-0 h-28 bg-[#854d0e] border-t-8 border-[#a16207]"></div>
+          <div class="absolute top-4 right-6 w-32 h-32 rounded-full bg-amber-300/30 blur-2xl"></div>
+          <!-- Cute desk stationery doodads -->
+          <div class="absolute bottom-28 left-6 opacity-80 flex items-end gap-2">
+            <div class="w-8 h-16 bg-emerald-700 rounded-t-lg shadow-sm border border-emerald-800"></div>
+            <div class="w-6 h-12 bg-amber-600 rounded-t shadow-sm"></div>
+            <div class="w-10 h-10 rounded-full bg-rose-400/80 border-2 border-white shadow-sm flex items-center justify-center text-xs">☕</div>
+          </div>
+          <!-- String lights -->
+          <div class="absolute top-2 inset-x-0 flex justify-around opacity-75">
+            <span class="w-3 h-3 rounded-full bg-amber-400 shadow-md animate-pulse"></span>
+            <span class="w-3 h-3 rounded-full bg-rose-400 shadow-md animate-pulse" style="animation-delay: 0.4s"></span>
+            <span class="w-3 h-3 rounded-full bg-sky-400 shadow-md animate-pulse" style="animation-delay: 0.8s"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-400 shadow-md animate-pulse" style="animation-delay: 1.2s"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-400 shadow-md animate-pulse" style="animation-delay: 1.6s"></span>
+          </div>
+        `
+      },
+      {
+        id: 'porch',
+        name: 'Sunny Porch',
+        icon: 'fa-house-chimney',
+        bgClass: 'from-sky-200 via-blue-100 to-emerald-100',
+        decorSvg: `
+          <!-- Porch wooden floor decking -->
+          <div class="absolute bottom-0 inset-x-0 h-32 bg-[#b45309] border-t-8 border-[#92400e] flex divide-x divide-[#78350f]/30">
+            <div class="flex-1"></div><div class="flex-1"></div><div class="flex-1"></div><div class="flex-1"></div>
+          </div>
+          <!-- Terracotta Plant pot -->
+          <div class="absolute bottom-32 right-6">
+            <div class="w-14 h-12 bg-orange-700 rounded-b-xl border-t-4 border-orange-800 shadow-lg relative flex justify-center">
+              <div class="absolute -top-6 text-2xl">🪴</div>
+            </div>
+          </div>
+          <!-- Sun -->
+          <div class="absolute top-6 left-6 w-16 h-16 rounded-full bg-amber-300 shadow-lg shadow-amber-200/50"></div>
+          <div class="absolute top-10 right-16 text-3xl opacity-80">☁️</div>
+        `
+      },
+      {
+        id: 'rainy',
+        name: 'Rainy Porch',
+        icon: 'fa-cloud-showers-heavy',
+        bgClass: 'from-slate-400 via-slate-300 to-cyan-200',
+        decorSvg: `
+          <!-- Wet stones porch -->
+          <div class="absolute bottom-0 inset-x-0 h-28 bg-slate-600 border-t-8 border-slate-700"></div>
+          <!-- Raindrops streaks -->
+          <div class="absolute inset-0 bg-[radial-gradient(#93c5fd_1px,transparent_1px)] [background-size:18px_18px] opacity-40"></div>
+          <div class="absolute bottom-28 left-8 text-2xl">🪣</div>
+          <div class="absolute top-4 left-1/2 -translate-x-1/2 text-4xl opacity-75">🌧️</div>
+        `
+      },
+      {
+        id: 'autumn',
+        name: 'Pumpkin Porch',
+        icon: 'fa-leaf',
+        bgClass: 'from-orange-200 via-amber-100 to-stone-200',
+        decorSvg: `
+          <div class="absolute bottom-0 inset-x-0 h-28 bg-[#78350f] border-t-8 border-[#451a03]"></div>
+          <!-- Pumpkins -->
+          <div class="absolute bottom-28 left-6 text-3xl">🎃</div>
+          <div class="absolute bottom-28 left-16 text-xl">🍁</div>
+          <div class="absolute bottom-28 right-8 text-3xl">🌾</div>
+          <div class="absolute top-8 right-10 text-2xl">🍂</div>
+        `
+      }
+    ];
+  </script>
+
+  <script>
+    // State of Goose Dress-up
+    const GooseState = {
+      name: 'Lucy the Goose',
+      activeCategory: 'hats',
+      backdrop: 'desk',
+      blushCheeks: true,
+      equipment: {
+        hats: null,
+        outfits: null,
+        neckwear: null,
+        beak: null,
+        footwear: null,
+        extra: null
+      }
+    };
+
+    // Honk comedic soundbites & quotes
+    const HONK_MESSAGES = [
+      "HONK!!",
+      "HONK HONK!",
+      "Peace was never an option!",
+      "Did somebody say oats?!",
+      "Dressed to impress!",
+      "*aggressive waddling*",
+      "Unto us a stylish goose is born!",
+      "Quack? Never. HONK!",
+      "Desk guardian on duty!",
+      "Snacks please!!"
+    ];
+
+    // DOM References
+    const sceneContainer = document.getElementById('sceneContainer');
+    const envBackdrop = document.getElementById('envBackdrop');
+    const gooseActor = document.getElementById('gooseActor');
+    const gooseNameInput = document.getElementById('gooseNameInput');
+    const speechBubble = document.getElementById('speechBubble');
+    const speechText = document.getElementById('speechText');
+    const honkBtn = document.getElementById('honkBtn');
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const soundIcon = document.getElementById('soundIcon');
+    const itemsGrid = document.getElementById('itemsGrid');
+    const categoryNav = document.getElementById('categoryNav');
+    const clearCategoryBtn = document.getElementById('clearCategoryBtn');
+    const currentlyWearingSummary = document.getElementById('currentlyWearingSummary');
+    const activeOutfitCount = document.getElementById('activeOutfitCount');
+    const randomizeBtn = document.getElementById('randomizeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const snapshotBtn = document.getElementById('snapshotBtn');
+    const backdropSelectors = document.getElementById('backdropSelectors');
+    const blushCheek = document.getElementById('blushCheek');
+    const baseFeetLayer = document.getElementById('baseFeetLayer');
+
+    // Layer SVG slots
+    const layerHat = document.getElementById('layerHat');
+    const layerOutfit = document.getElementById('layerOutfit');
+    const layerNeckwear = document.getElementById('layerNeckwear');
+    const layerBeak = document.getElementById('layerBeak');
+    const layerFootwear = document.getElementById('layerFootwear');
+    const layerEyewear = document.getElementById('layerEyewear');
+
+    // Photo Modal DOM
+    const photoModal = document.getElementById('photoModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const downloadPhotoBtn = document.getElementById('downloadPhotoBtn');
+    const snapshotCanvas = document.getElementById('snapshotCanvas');
+    const polaroidTitle = document.getElementById('polaroidTitle');
+
+    function renderCategoryTabs() {
+      categoryNav.querySelectorAll('.cat-tab').forEach(btn => {
+        const cat = btn.dataset.cat;
+        if (cat === GooseState.activeCategory) {
+          btn.className = 'cat-tab active px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-amber-500 text-white shadow-xs';
+        } else {
+          btn.className = 'cat-tab px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200';
+        }
+      });
+    }
+
+    function renderItemsGrid() {
+      itemsGrid.innerHTML = '';
+      const items = WARDROBE_DATA[GooseState.activeCategory] || [];
+      const currentEquipped = GooseState.equipment[GooseState.activeCategory];
+
+      items.forEach(item => {
+        const isEquipped = (item.isBlushToggle) ? GooseState.blushCheeks : (currentEquipped === item.id);
+        
+        const card = document.createElement('div');
+        card.className = `group relative rounded-2xl p-3 border-2 cursor-pointer transition-all duration-200 flex flex-col items-center justify-between text-center ${
+          isEquipped 
+            ? 'border-amber-500 bg-amber-50 shadow-md ring-2 ring-amber-400/30' 
+            : 'border-slate-200/80 bg-white hover:border-amber-300 hover:shadow-sm'
+        }`;
+
+        card.innerHTML = `
+          <!-- Thumbnail icon badge -->
+          <div class="w-16 h-16 rounded-xl flex items-center justify-center p-1.5 mb-2 relative overflow-hidden transition-transform group-hover:scale-105" style="background-color: ${item.previewBg}">
+            <svg viewBox="0 0 500 620" class="w-24 h-24 overflow-visible">
+              ${item.svg}
+            </svg>
+          </div>
+          
+          <div class="w-full">
+            <h4 class="text-xs font-bold text-slate-800 line-clamp-1 leading-tight">${item.name}</h4>
+            <span class="text-[10px] font-semibold text-amber-700/80">${item.tag}</span>
+          </div>
+
+          <!-- Equiped Indicator Checkmark -->
+          ${isEquipped ? `
+            <div class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs shadow-md border-2 border-white">
+              <i class="fa-solid fa-check"></i>
+            </div>
+          ` : ''}
+        `;
+
+        card.addEventListener('click', () => {
+          toggleEquipItem(GooseState.activeCategory, item);
+        });
+
+        itemsGrid.appendChild(card);
+      });
+
+      updateWearSummary();
+    }
+
+    function updateWearSummary() {
+      let count = 0;
+      const equippedNames = [];
+
+      Object.entries(GooseState.equipment).forEach(([cat, id]) => {
+        if (id) {
+          count++;
+          const found = WARDROBE_DATA[cat]?.find(i => i.id === id);
+          if (found) equippedNames.push(found.name);
+        }
+      });
+
+      activeOutfitCount.textContent = `${count} Worn`;
+      if (count === 0) {
+        currentlyWearingSummary.textContent = "Wearing: Natural Goose";
+      } else {
+        currentlyWearingSummary.textContent = `Wearing: ${equippedNames.slice(0, 2).join(', ')}${equippedNames.length > 2 ? ` +${equippedNames.length - 2} more` : ''}`;
+      }
+    }
+
+    function toggleEquipItem(category, item) {
+      soundSystem.playClick();
+
+      if (item.isBlushToggle) {
+        GooseState.blushCheeks = !GooseState.blushCheeks;
+        blushCheek.style.display = GooseState.blushCheeks ? 'block' : 'none';
+        renderItemsGrid();
+        return;
+      }
+
+      // If already equipped, unequip; otherwise equip
+      if (GooseState.equipment[category] === item.id) {
+        GooseState.equipment[category] = null;
+      } else {
+        GooseState.equipment[category] = item.id;
+      }
+
+      renderGooseLayers();
+      renderItemsGrid();
+    }
+
+    function renderGooseLayers() {
+      // 1. Hat layer
+      const hatItem = WARDROBE_DATA.hats.find(i => i.id === GooseState.equipment.hats);
+      layerHat.innerHTML = hatItem ? hatItem.svg : '';
+
+      // 2. Outfit layer
+      const outfitItem = WARDROBE_DATA.outfits.find(i => i.id === GooseState.equipment.outfits);
+      layerOutfit.innerHTML = outfitItem ? outfitItem.svg : '';
+
+      // 3. Neckwear layer
+      const neckItem = WARDROBE_DATA.neckwear.find(i => i.id === GooseState.equipment.neckwear);
+      layerNeckwear.innerHTML = neckItem ? neckItem.svg : '';
+
+      // 4. Beak layer
+      const beakItem = WARDROBE_DATA.beak.find(i => i.id === GooseState.equipment.beak);
+      layerBeak.innerHTML = beakItem ? beakItem.svg : '';
+
+      // 5. Footwear layer (hides base feet when boots are worn for neat styling)
+      const footItem = WARDROBE_DATA.footwear.find(i => i.id === GooseState.equipment.footwear);
+      if (footItem) {
+        layerFootwear.innerHTML = footItem.svg;
+        baseFeetLayer.style.display = 'none';
+      } else {
+        layerFootwear.innerHTML = '';
+        baseFeetLayer.style.display = 'block';
+      }
+
+      // 6. Eyewear / Extra layer
+      const extraItem = WARDROBE_DATA.extra.find(i => i.id === GooseState.equipment.extra && !i.isBlushToggle);
+      layerEyewear.innerHTML = extraItem ? extraItem.svg : '';
+    }
+
+    function initBackdrops() {
+      backdropSelectors.innerHTML = '';
+      BACKDROPS.forEach(bd => {
+        const btn = document.createElement('button');
+        const isActive = GooseState.backdrop === bd.id;
+        btn.className = `px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+          isActive 
+            ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+            : 'text-slate-600 hover:bg-slate-100'
+        }`;
+        btn.innerHTML = `<i class="fa-solid ${bd.icon}"></i> <span>${bd.name}</span>`;
+        btn.addEventListener('click', () => {
+          setBackdrop(bd.id);
+        });
+        backdropSelectors.appendChild(btn);
+      });
+
+      applyBackdrop(GooseState.backdrop);
+    }
+
+    function setBackdrop(id) {
+      soundSystem.playClick();
+      GooseState.backdrop = id;
+      initBackdrops();
+    }
+
+    function applyBackdrop(id) {
+      const bd = BACKDROPS.find(b => b.id === id) || BACKDROPS[0];
+      sceneContainer.className = `relative w-full aspect-[4/5] max-h-[580px] rounded-3xl overflow-hidden shadow-2xl border-4 border-white transition-all duration-500 bg-gradient-to-b ${bd.bgClass} flex flex-col justify-end items-center`;
+      envBackdrop.innerHTML = bd.decorSvg;
+    }
+
+    let honkTimeout = null;
+    function triggerHonk() {
+      soundSystem.playHonk();
+
+      // Trigger visual bounce animation
+      gooseActor.classList.remove('idle-breathe');
+      gooseActor.classList.remove('honking-animation');
+      void gooseActor.offsetWidth; // re-flow
+      gooseActor.classList.add('honking-animation');
+
+      // Random Honk quote
+      const randMsg = HONK_MESSAGES[Math.floor(Math.random() * HONK_MESSAGES.length)];
+      speechText.textContent = randMsg;
+
+      speechBubble.classList.remove('opacity-0', 'pointer-events-none');
+      speechBubble.classList.add('bubble-pop');
+
+      clearTimeout(honkTimeout);
+      honkTimeout = setTimeout(() => {
+        speechBubble.classList.remove('bubble-pop');
+        speechBubble.classList.add('opacity-0', 'pointer-events-none');
+        gooseActor.classList.add('idle-breathe');
+      }, 1500);
+    }
+
+    // Category tabs click
+    categoryNav.addEventListener('click', (e) => {
+      const tabBtn = e.target.closest('.cat-tab');
+      if (tabBtn) {
+        soundSystem.playClick();
+        GooseState.activeCategory = tabBtn.dataset.cat;
+        renderCategoryTabs();
+        renderItemsGrid();
+      }
+    });
+
+    // Clear currently selected category
+    clearCategoryBtn.addEventListener('click', () => {
+      soundSystem.playClick();
+      GooseState.equipment[GooseState.activeCategory] = null;
+      renderGooseLayers();
+      renderItemsGrid();
+    });
+
+    // Goose Actor Click -> Honk!
+    gooseActor.addEventListener('click', triggerHonk);
+    honkBtn.addEventListener('click', triggerHonk);
+
+    // Sound Mute Toggle
+    soundToggleBtn.addEventListener('click', () => {
+      soundSystem.enabled = !soundSystem.enabled;
+      if (soundSystem.enabled) {
+        soundIcon.className = "fa-solid fa-volume-high";
+        soundToggleBtn.classList.remove('text-slate-400');
+        soundToggleBtn.classList.add('text-slate-600');
+      } else {
+        soundIcon.className = "fa-solid fa-volume-xmark";
+        soundToggleBtn.classList.add('text-slate-400');
+        soundToggleBtn.classList.remove('text-slate-600');
+      }
+      soundSystem.playClick();
+    });
+
+    // Randomize Outfit ("Surprise me!")
+    randomizeBtn.addEventListener('click', () => {
+      soundSystem.playClick();
+
+      // Random hat (50% chance)
+      GooseState.equipment.hats = Math.random() > 0.35 
+        ? WARDROBE_DATA.hats[Math.floor(Math.random() * WARDROBE_DATA.hats.length)].id 
+        : null;
+
+      // Random outfit (60% chance)
+      GooseState.equipment.outfits = Math.random() > 0.3 
+        ? WARDROBE_DATA.outfits[Math.floor(Math.random() * WARDROBE_DATA.outfits.length)].id 
+        : null;
+
+      // Random neckwear (40% chance)
+      GooseState.equipment.neckwear = Math.random() > 0.5 
+        ? WARDROBE_DATA.neckwear[Math.floor(Math.random() * WARDROBE_DATA.neckwear.length)].id 
+        : null;
+
+      // Random beak item (40% chance)
+      GooseState.equipment.beak = Math.random() > 0.5 
+        ? WARDROBE_DATA.beak[Math.floor(Math.random() * WARDROBE_DATA.beak.length)].id 
+        : null;
+
+      // Random footwear (40% chance)
+      GooseState.equipment.footwear = Math.random() > 0.5 
+        ? WARDROBE_DATA.footwear[Math.floor(Math.random() * WARDROBE_DATA.footwear.length)].id 
+        : null;
+
+      // Random extra (30% chance)
+      GooseState.equipment.extra = Math.random() > 0.6 
+        ? WARDROBE_DATA.extra.filter(e => !e.isBlushToggle)[Math.floor(Math.random() * 2)].id 
+        : null;
+
+      // Random backdrop
+      const randomBackdrop = BACKDROPS[Math.floor(Math.random() * BACKDROPS.length)].id;
+      setBackdrop(randomBackdrop);
+
+      renderGooseLayers();
+      renderItemsGrid();
+      triggerHonk();
+    });
+
+    // Naked Goose / Reset All
+    resetBtn.addEventListener('click', () => {
+      soundSystem.playClick();
+      Object.keys(GooseState.equipment).forEach(k => GooseState.equipment[k] = null);
+      renderGooseLayers();
+      renderItemsGrid();
+    });
+
+    // Goose Name update
+    gooseNameInput.addEventListener('input', (e) => {
+      GooseState.name = e.target.value.trim() || 'Desk Goose';
+      polaroidTitle.textContent = GooseState.name;
+    });
+
+    snapshotBtn.addEventListener('click', () => {
+      soundSystem.playClick();
+      generatePolaroidSnapshot();
+      photoModal.classList.remove('hidden');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      photoModal.classList.add('hidden');
+    });
+
+    photoModal.addEventListener('click', (e) => {
+      if (e.target === photoModal) photoModal.classList.add('hidden');
+    });
+
+    function generatePolaroidSnapshot() {
+      polaroidTitle.textContent = GooseState.name || 'Lucy the Goose';
+      
+      const width = 600;
+      const height = 750;
+      snapshotCanvas.width = width;
+      snapshotCanvas.height = height;
+      const ctx = snapshotCanvas.getContext('2d');
+
+      // 1. Draw Backdrop gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      if (GooseState.backdrop === 'rainy') {
+        grad.addColorStop(0, '#94a3b8');
+        grad.addColorStop(1, '#a5f3fc');
+      } else if (GooseState.backdrop === 'autumn') {
+        grad.addColorStop(0, '#fed7aa');
+        grad.addColorStop(1, '#e7e5e4');
+      } else if (GooseState.backdrop === 'porch') {
+        grad.addColorStop(0, '#bae6fd');
+        grad.addColorStop(1, '#d1fae5');
+      } else {
+        // desk default
+        grad.addColorStop(0, '#fef3c7');
+        grad.addColorStop(1, '#fed7aa');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Floor plank
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(0, height - 130, width, 130);
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(0, height - 130, width, 10);
+
+      // 2. Convert SVG into canvas image
+      const svgElement = document.getElementById('gooseSvg');
+      const xml = new XMLSerializer().serializeToString(svgElement);
+      const svg64 = btoa(unescape(encodeURIComponent(xml)));
+      const b64Start = 'data:image/svg+xml;base64,';
+      const image64 = b64Start + svg64;
+
+      const img = new Image();
+      img.onload = function() {
+        // Draw centered goose
+        const gooseW = 460;
+        const gooseH = 570;
+        const x = (width - gooseW) / 2;
+        const y = height - gooseH - 45;
+        ctx.drawImage(img, x, y, gooseW, gooseH);
+
+        // Stamp date watermark
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.font = 'bold 16px Nunito, sans-serif';
+        const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        ctx.fillText(`Honk Studio • ${today}`, 24, 38);
+      };
+      img.src = image64;
+    }
+
+    // Save/Download Polaroid
+    downloadPhotoBtn.addEventListener('click', () => {
+      soundSystem.playClick();
+      const link = document.createElement('a');
+      link.download = `${GooseState.name.toLowerCase().replace(/\s+/g, '-')}-snapshot.png`;
+      link.href = snapshotCanvas.toDataURL('image/png');
+      link.click();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initBackdrops();
+      renderCategoryTabs();
+      renderItemsGrid();
+      renderGooseLayers();
+    });
+  </script>
+
+</body>
+</html>
